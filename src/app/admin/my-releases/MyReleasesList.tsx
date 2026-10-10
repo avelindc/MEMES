@@ -7,7 +7,8 @@ import {
   Trash2, Search, Filter, CheckSquare, Square, Disc
 } from "lucide-react";
 import { adminTakedownReleaseAction, adminEditReleaseAction } from "@/app/actions/adminReleaseManagement";
-import { bulkDeleteReleasesAction } from "@/app/actions/admin";
+import { bulkDeleteReleasesAction, updateReleaseLinksAction } from "@/app/actions/admin";
+import { ExternalLink } from "lucide-react";
 
 const FALLBACK_VINYL = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80" fill="none"><rect width="80" height="80" rx="8" fill="%230f172a"/><circle cx="40" cy="40" r="30" fill="%231e293b" stroke="%23334155" stroke-width="2"/><circle cx="40" cy="40" r="20" fill="%230f172a"/><circle cx="40" cy="40" r="10" fill="%23e11d48"/><circle cx="40" cy="40" r="3" fill="%23ffffff"/></svg>`;
 
@@ -52,6 +53,9 @@ interface Release {
   releaseDate: string;
   coverArtworkUrl: string;
   status: string;
+  spotifyUrl?: string;
+  appleMusicUrl?: string;
+  youtubeMusicUrl?: string;
   artistUserId: string;
   artistName: string;
   artistEmail: string;
@@ -87,6 +91,11 @@ export function MyReleasesList({ releases }: { releases: Release[] }) {
   const [editGenre, setEditGenre] = useState("");
   const [editUpc, setEditUpc] = useState("");
   const [editIsrc, setEditIsrc] = useState("");
+
+  // Link Modal State
+  const [linkModal, setLinkModal] = useState<Release | null>(null);
+  const [links, setLinks] = useState({ spotifyUrl: "", appleMusicUrl: "", youtubeMusicUrl: "" });
+  const [savingLinks, setSavingLinks] = useState(false);
 
   const uniqueArtists = Array.from(new Set(list.map(r => r.primaryArtist))).sort();
 
@@ -136,6 +145,43 @@ export function MyReleasesList({ releases }: { releases: Release[] }) {
     setEditUpc(rel.tracks?.[0]?.upc || "");
     setEditIsrc(rel.tracks?.[0]?.isrc || "");
     setIsEditing(true);
+  };
+
+  const handleOpenLinkModal = (release: Release) => {
+    setLinks({
+      spotifyUrl: release.spotifyUrl || "",
+      appleMusicUrl: release.appleMusicUrl || "",
+      youtubeMusicUrl: release.youtubeMusicUrl || ""
+    });
+    setLinkModal(release);
+  };
+
+  const handleSaveLinks = async () => {
+    if (!linkModal) return;
+    setSavingLinks(true);
+    try {
+      const res = await updateReleaseLinksAction(
+        linkModal.id,
+        linkModal.artistUserId,
+        linkModal.artistName,
+        linkModal.artistEmail,
+        linkModal.title,
+        links
+      );
+      if (res.success) {
+        setList(list.map(r => r.id === linkModal.id ? { ...r, ...links, status: "RELEASED" } : r));
+        if (selected?.id === linkModal.id) {
+          setSelected({ ...selected, ...links, status: "RELEASED" });
+        }
+        setLinkModal(null);
+      } else {
+        alert("Gagal mengupdate link: " + (res as any).error);
+      }
+    } catch (err: any) {
+      alert("Terjadi kesalahan: " + err.message);
+    } finally {
+      setSavingLinks(false);
+    }
   };
 
   const playAudio = (track: Track, e?: React.MouseEvent) => {
@@ -818,6 +864,14 @@ export function MyReleasesList({ releases }: { releases: Release[] }) {
                 )}
                 
                 <button
+                  onClick={() => handleOpenLinkModal(selected)}
+                  className="flex-1 min-w-[130px] h-12 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition font-bold rounded-2xl flex items-center justify-center gap-2 text-xs"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Input Link DSP
+                </button>
+                
+                <button
                   onClick={() => handleTakedown(selected)}
                   disabled={loadingTakedown}
                   className="flex-1 min-w-[130px] h-12 bg-amber-50 text-amber-700 hover:bg-amber-100 transition font-bold rounded-2xl flex items-center justify-center gap-2 text-xs"
@@ -836,6 +890,72 @@ export function MyReleasesList({ releases }: { releases: Release[] }) {
                 </button>
               </div>
 
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Link Modal */}
+      {linkModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl relative animate-in zoom-in-95">
+            <button
+              onClick={() => setLinkModal(null)}
+              className="absolute top-4 right-4 p-2 text-slate-400 hover:bg-slate-100 rounded-full transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <h3 className="text-lg font-bold text-slate-900 mb-1">Input Link Rilisan</h3>
+            <p className="text-xs text-slate-500 mb-6">Masukkan link DSP untuk membuat Smartlink otomatis dan mengirim notifikasi email ke artis.</p>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Spotify URL</label>
+                <input
+                  type="url"
+                  value={links.spotifyUrl}
+                  onChange={(e) => setLinks({...links, spotifyUrl: e.target.value})}
+                  placeholder="https://open.spotify.com/album/..."
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Apple Music URL</label>
+                <input
+                  type="url"
+                  value={links.appleMusicUrl}
+                  onChange={(e) => setLinks({...links, appleMusicUrl: e.target.value})}
+                  placeholder="https://music.apple.com/..."
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">YouTube Music URL</label>
+                <input
+                  type="url"
+                  value={links.youtubeMusicUrl}
+                  onChange={(e) => setLinks({...links, youtubeMusicUrl: e.target.value})}
+                  placeholder="https://music.youtube.com/..."
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                />
+              </div>
+              
+              <div className="pt-4 flex items-center justify-end gap-3">
+                <button
+                  onClick={() => setLinkModal(null)}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-semibold rounded-xl transition-all"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleSaveLinks}
+                  disabled={savingLinks}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-xl disabled:opacity-50 transition-all flex items-center gap-2"
+                >
+                  {savingLinks && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {savingLinks ? "Menyimpan..." : "Simpan & Kirim Email"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
