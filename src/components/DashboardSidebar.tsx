@@ -19,6 +19,7 @@ const links = [
   { name: "Katalog Damarlangit", href: "/dashboard/katalog-damarlangit", icon: BookOpen },
   { name: "Upload Music", href: "/dashboard/upload", icon: UploadCloud },
   { name: "My Releases", href: "/dashboard/releases", icon: Disc },
+  { name: "MyLink", href: "/dashboard/mylink", icon: Music },
   { name: "Royalties", href: "/dashboard/royalties", icon: DollarSign },
   { name: "Royalty Per Song", href: "/dashboard/royalty-per-song", icon: DollarSign },
   { name: "Withdraw", href: "/dashboard/withdraw", icon: CreditCard },
