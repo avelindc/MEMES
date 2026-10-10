@@ -237,6 +237,7 @@ export default function ReviewList({ initialReleases }: { initialReleases: Revie
       youtubeMusicUrl: release.youtubeMusicUrl || ""
     });
     setLinkModal(release);
+    setSelected(null);
   };
 
   const handleSaveLinks = async () => {

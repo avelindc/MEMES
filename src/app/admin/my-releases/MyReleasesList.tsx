@@ -154,6 +154,7 @@ export function MyReleasesList({ releases }: { releases: Release[] }) {
       youtubeMusicUrl: release.youtubeMusicUrl || ""
     });
     setLinkModal(release);
+    setSelected(null); // Close the background details modal
   };
 
   const handleSaveLinks = async () => {
