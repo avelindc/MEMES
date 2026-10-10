@@ -44,11 +44,10 @@ export default async function SmartlinkPage({ params }: { params: { id: string }
       <div className="w-full max-w-md bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-3xl overflow-hidden z-10 shadow-2xl relative">
         <div className="p-8 pb-6 flex flex-col items-center text-center">
           <div className="relative w-48 h-48 md:w-56 md:h-56 rounded-2xl overflow-hidden shadow-2xl shadow-black/50 mb-6 group">
-            <Image
+            <img
               src={coverUrl}
               alt={release.title}
-              fill
-              className="object-cover transition-transform duration-700 group-hover:scale-105"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
           </div>
           
