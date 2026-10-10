@@ -1,8 +1,8 @@
-﻿"use server";
+"use server";
 
 import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import { sendAccountApprovedEmail, sendAccountRejectedEmail, sendReleaseApprovedEmail, sendReleaseRejectedEmail } from "@/lib/email";
+import { sendAccountApprovedEmail, sendAccountRejectedEmail, sendReleaseApprovedEmail, sendReleaseRejectedEmail, sendSmartlinkEmail } from "@/lib/email";
 import { updateTelegramReleaseMessage } from "@/lib/telegramBot";
 import bcrypt from "bcryptjs";
 
@@ -113,6 +113,44 @@ export async function updateReleaseStatusAction(
 
   revalidatePath("/admin/releases");
   revalidatePath("/dashboard/releases"); return { success: true }; }
+
+export async function updateReleaseLinksAction(
+  releaseId: string,
+  artistUserId: string,
+  userName: string,
+  userEmail: string,
+  title: string,
+  links: { spotifyUrl?: string; appleMusicUrl?: string; youtubeMusicUrl?: string; }
+) {
+  try {
+    const updatedRelease = await prisma.release.update({
+      where: { id: releaseId },
+      data: { 
+        status: "RELEASED",
+        spotifyUrl: links.spotifyUrl || null,
+        appleMusicUrl: links.appleMusicUrl || null,
+        youtubeMusicUrl: links.youtubeMusicUrl || null,
+      }
+    });
+
+    await prisma.notification.create({
+      data: {
+        userId: artistUserId,
+        title: `Release is Live!`,
+        message: `Your release "${title}" is now Live. Your Smartlink is ready.`
+      }
+    });
+
+    const smartlinkUrl = `https://breakoutmusicrecord.com/listen/${releaseId}`;
+    await sendSmartlinkEmail(userEmail, userName, title, smartlinkUrl);
+
+    revalidatePath("/admin/releases");
+    revalidatePath("/dashboard/releases");
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || "Failed to update links" };
+  }
+}
 
 export async function resetArtistDataAction(artistId: string) {
   try {

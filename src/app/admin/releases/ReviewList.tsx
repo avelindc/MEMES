@@ -24,7 +24,7 @@ import {
   Loader2,
   Disc3
 } from "lucide-react";
-import { updateReleaseStatusAction } from "@/app/actions/admin";
+import { updateReleaseStatusAction, updateReleaseLinksAction } from "@/app/actions/admin";
 
 export interface TrackItem {
   id: string;
@@ -92,6 +92,11 @@ export default function ReviewList({ initialReleases }: { initialReleases: Revie
   const [filter, setFilter] = useState<string>("PENDING");
   const [search, setSearch] = useState<string>("");
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
+
+  // Link Modal State
+  const [linkModal, setLinkModal] = useState<ReviewItem | null>(null);
+  const [links, setLinks] = useState({ spotifyUrl: "", appleMusicUrl: "", youtubeMusicUrl: "" });
+  const [savingLinks, setSavingLinks] = useState(false);
 
   // Audio Player State
   const [currentTrack, setCurrentTrack] = useState<{
@@ -223,6 +228,43 @@ export default function ReviewList({ initialReleases }: { initialReleases: Revie
     } catch (err: any) {
       alert("Terjadi kesalahan: " + err.message);
     } finally { setUpdatingStatus(null); }
+  };
+
+  const handleOpenLinkModal = (release: ReviewItem) => {
+    setLinks({
+      spotifyUrl: release.spotifyUrl || "",
+      appleMusicUrl: release.appleMusicUrl || "",
+      youtubeMusicUrl: release.youtubeMusicUrl || ""
+    });
+    setLinkModal(release);
+  };
+
+  const handleSaveLinks = async () => {
+    if (!linkModal) return;
+    setSavingLinks(true);
+    try {
+      const res = await updateReleaseLinksAction(
+        linkModal.id,
+        linkModal.user.id,
+        linkModal.user.name || "Artist",
+        linkModal.user.email || "",
+        linkModal.title,
+        links
+      );
+      if (res.success) {
+        setReleases(releases.map(r => r.id === linkModal.id ? { ...r, ...links, status: "RELEASED" } : r));
+        setLinkModal(null);
+        if (selected?.id === linkModal.id) {
+          setSelected({ ...selected, ...links, status: "RELEASED" });
+        }
+      } else {
+        alert("Gagal mengupdate link: " + (res as any).error);
+      }
+    } catch (err: any) {
+      alert("Terjadi kesalahan: " + err.message);
+    } finally {
+      setSavingLinks(false);
+    }
   };
 
   const filtered = releases.filter((r) => {
@@ -651,6 +693,80 @@ export default function ReviewList({ initialReleases }: { initialReleases: Revie
                   className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl disabled:opacity-50 transition-all shadow-sm"
                 >
                   Reject
+                </button>
+                {(selected.status === "APPROVED" || selected.status === "RELEASED") && (
+                  <button
+                    onClick={() => handleOpenLinkModal(selected)}
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-all shadow-sm flex items-center gap-1"
+                  >
+                    <ExternalLink className="w-3 h-3" /> Input Link DSP
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Link Modal */}
+      {linkModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl relative animate-in zoom-in-95">
+            <button
+              onClick={() => setLinkModal(null)}
+              className="absolute top-4 right-4 p-2 text-slate-400 hover:bg-slate-100 rounded-full transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <h3 className="text-lg font-bold text-slate-900 mb-1">Input Link Rilisan</h3>
+            <p className="text-xs text-slate-500 mb-6">Masukkan link DSP untuk membuat Smartlink otomatis dan mengirim notifikasi email ke artis.</p>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Spotify URL</label>
+                <input
+                  type="url"
+                  value={links.spotifyUrl}
+                  onChange={(e) => setLinks({...links, spotifyUrl: e.target.value})}
+                  placeholder="https://open.spotify.com/album/..."
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Apple Music URL</label>
+                <input
+                  type="url"
+                  value={links.appleMusicUrl}
+                  onChange={(e) => setLinks({...links, appleMusicUrl: e.target.value})}
+                  placeholder="https://music.apple.com/..."
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">YouTube Music URL</label>
+                <input
+                  type="url"
+                  value={links.youtubeMusicUrl}
+                  onChange={(e) => setLinks({...links, youtubeMusicUrl: e.target.value})}
+                  placeholder="https://music.youtube.com/..."
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
+                />
+              </div>
+              
+              <div className="pt-4 flex items-center justify-end gap-3">
+                <button
+                  onClick={() => setLinkModal(null)}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-semibold rounded-xl transition-all"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleSaveLinks}
+                  disabled={savingLinks}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-xl disabled:opacity-50 transition-all flex items-center gap-2"
+                >
+                  {savingLinks && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {savingLinks ? "Menyimpan..." : "Simpan & Kirim Email"}
                 </button>
               </div>
             </div>

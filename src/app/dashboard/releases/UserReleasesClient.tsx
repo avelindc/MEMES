@@ -19,7 +19,8 @@ import {
   Calendar,
   Layers,
   Sparkles,
-  Loader2
+  Loader2,
+  ExternalLink
 } from "lucide-react";
 
 export interface TrackItem {
@@ -416,6 +417,17 @@ export default function UserReleasesClient({
                             >
                               <Download className="w-4 h-4" />
                             </button>
+                          )}
+
+                          {rel.status === "RELEASED" && (
+                            <a
+                              href={`/listen/${rel.id}`}
+                              target="_blank"
+                              className="p-2 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-200 hover:bg-indigo-100 transition-all flex items-center gap-1 text-xs font-semibold"
+                              title="Buka Smartlink"
+                            >
+                              <ExternalLink className="w-4 h-4" /> Smartlink
+                            </a>
                           )}
                         </div>
                       </td>

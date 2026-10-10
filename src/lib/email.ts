@@ -170,6 +170,37 @@ export async function sendReleaseRejectedEmail(to: string, name: string, title: 
   }
 }
 
+export async function sendSmartlinkEmail(to: string, name: string, title: string, smartlinkUrl: string) {
+  const subject = 'Lagu Anda Telah Rilis! (Smartlink)';
+  const html = generateEmailHtml(
+    'Rilisan Musik Telah Tersedia',
+    `
+      <p>Halo ${name},</p>
+      <p>Selamat! Rilisan Anda yang berjudul <strong>"${title}"</strong> kini telah resmi rilis dan tersedia di berbagai platform musik digital.</p>
+      <p>Kami telah membuatkan sebuah halaman <strong>Smartlink</strong> khusus untuk memudahkan Anda mempromosikan lagu ini ke para penggemar.</p>
+      <div style="background-color: #f3f4f6; color: #111827; padding: 16px; border-radius: 8px; margin: 20px 0; text-align: center;">
+        <strong>Link Promosi Anda:</strong><br/>
+        <a href="${smartlinkUrl}" style="color: #2563eb; font-weight: bold;">${smartlinkUrl}</a>
+      </div>
+      <p>Bagikan link tersebut di bio Instagram, TikTok, dan media sosial Anda lainnya!</p>
+      <a href="${smartlinkUrl}" style="${BUTTON_STYLES}">Buka Smartlink</a>
+    `
+  );
+
+  if (!process.env.RESEND_API_KEY) {
+    console.warn('Simulated Email Send Smartlink:', subject, to);
+    return { success: true };
+  }
+
+  try {
+    await resend.emails.send({ from: fromEmail, to, subject, html });
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to send smartlink email:', error);
+    return { error };
+  }
+}
+
 export async function sendNewMessageNotification(to: string, name: string, messageSubject: string) {
   const subject = 'Pesan Baru dari Admin BREAKOUT';
   const html = generateEmailHtml(
