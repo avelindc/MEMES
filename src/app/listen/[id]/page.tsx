@@ -35,14 +35,15 @@ export default async function SmartlinkPage({ params }: { params: Promise<{ id: 
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background blurred artwork */}
+      {/* Custom Background Image */}
       <div 
-        className="absolute inset-0 opacity-20 blur-3xl scale-110 z-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${coverUrl})` }}
+        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(/smartlink-bg.jpg)` }}
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-900/50 to-slate-900 z-0" />
+      <div className="absolute inset-0 bg-black/40 z-0" />
 
-      <div className="w-full max-w-md bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-3xl overflow-hidden z-10 shadow-2xl relative">
+      {/* Glass card without blur */}
+      <div className="w-full max-w-md bg-slate-900/50 border border-white/10 rounded-3xl overflow-hidden z-10 shadow-2xl relative">
         <div className="p-8 pb-6 flex flex-col items-center text-center">
           <div className="relative w-48 h-48 md:w-56 md:h-56 rounded-2xl overflow-hidden shadow-2xl shadow-black/50 mb-6 group">
             <img
