@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { WithdrawalActionButtons } from "./WithdrawalActionButtons";
-import { sendWithdrawalPaidEmail } from "@/lib/email";
+import { sendWithdrawalPaidEmail, sendWithdrawalRejectedEmail } from "@/lib/email";
 
 const prisma = new PrismaClient();
 
@@ -47,6 +47,15 @@ export default async function AdminWithdrawalsPage() {
       if (user?.email) {
         const artistName = user.artists?.[0]?.stageName || user.name || "Artist";
         await sendWithdrawalPaidEmail(user.email, artistName);
+      }
+    } else if (status === 'REJECTED') {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        include: { artists: true }
+      });
+      if (user?.email) {
+        const artistName = user.artists?.[0]?.stageName || user.name || "Artist";
+        await sendWithdrawalRejectedEmail(user.email, artistName);
       }
     }
 

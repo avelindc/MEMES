@@ -1,7 +1,7 @@
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY || 're_dummy_key');
-const fromEmail = process.env.RESEND_FROM_EMAIL || 'BREAKOUT <noreply@breakoutmusic.online>';
+const fromEmail = process.env.RESEND_FROM_EMAIL || 'BREAKOUT <noreply@breakoutmusicrecord.com>';
 
 const BASE_STYLES = `
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -64,7 +64,7 @@ export async function sendAccountApprovedEmail(to: string, name: string) {
       <p>Halo ${name},</p>
       <p>Selamat! Akun artis Anda telah <strong>disetujui</strong> oleh tim kami.</p>
       <p>Anda sekarang sudah bisa login ke dashboard dan mulai mendistribusikan musik Anda ke seluruh platform digital (Spotify, Apple Music, YouTube, dll).</p>
-      <a href="https://breakoutmusic.online/login" style="${BUTTON_STYLES}">Login ke Dashboard</a>
+      <a href="https://breakoutmusicrecord.com/login" style="${BUTTON_STYLES}">Login ke Dashboard</a>
     `
   );
 
@@ -121,7 +121,7 @@ export async function sendReleaseApprovedEmail(to: string, name: string, title: 
       <p>Kabar baik! Rilisan Anda yang berjudul <strong>"${title}"</strong> telah lolos proses review dan <strong>disetujui</strong>.</p>
       <p>Tim kami akan segera memproses perilisan musik Anda ke berbagai platform digital (DSP) sesuai dengan tanggal rilis yang telah Anda tentukan.</p>
       <p>Pantau terus status rilisan Anda melalui dashboard BREAKOUT.</p>
-      <a href="https://breakoutmusic.online/dashboard/releases" style="${BUTTON_STYLES}">Lihat Dashboard</a>
+      <a href="https://breakoutmusicrecord.com/dashboard/releases" style="${BUTTON_STYLES}">Lihat Dashboard</a>
     `
   );
 
@@ -152,7 +152,7 @@ export async function sendReleaseRejectedEmail(to: string, name: string, title: 
         ${reason}
       </div>
       <p>Silakan perbaiki rilisan Anda sesuai dengan alasan di atas, kemudian Anda dapat mencoba mengunggahnya kembali melalui dashboard.</p>
-      <a href="https://breakoutmusic.online/dashboard/upload" style="${BUTTON_STYLES}">Upload Ulang Rilisan</a>
+      <a href="https://breakoutmusicrecord.com/dashboard/upload" style="${BUTTON_STYLES}">Upload Ulang Rilisan</a>
     `
   );
 
@@ -181,7 +181,7 @@ export async function sendNewMessageNotification(to: string, name: string, messa
         <strong>${messageSubject}</strong>
       </div>
       <p>Silakan login ke dashboard dan buka menu <strong>Inbox</strong> untuk membaca pesan selengkapnya dan mengunduh lampiran (jika ada).</p>
-      <a href="https://breakoutmusic.online/dashboard/inbox" style="${BUTTON_STYLES}">Buka Inbox</a>
+      <a href="https://breakoutmusicrecord.com/dashboard/inbox" style="${BUTTON_STYLES}">Buka Inbox</a>
     `
   );
 
@@ -216,7 +216,7 @@ export async function sendNewMessageNotificationBatch(users: {email: string, nam
           <strong>${messageSubject}</strong>
         </div>
         <p>Silakan login ke dashboard dan buka menu <strong>Inbox</strong> untuk membaca pesan selengkapnya dan mengunduh lampiran (jika ada).</p>
-        <a href="https://breakoutmusic.online/dashboard/inbox" style="${BUTTON_STYLES}">Buka Inbox</a>
+        <a href="https://breakoutmusicrecord.com/dashboard/inbox" style="${BUTTON_STYLES}">Buka Inbox</a>
       `
     )
   }));
@@ -284,7 +284,7 @@ export async function sendWithdrawalPaidEmail(to: string, name: string) {
       <p>Kabar gembira! Permintaan penarikan royalti (withdrawal) Anda <strong>telah berhasil kami bayarkan</strong>.</p>
       <p>Silakan periksa saldo di rekening bank atau e-wallet yang Anda daftarkan.</p>
       <p>Terima kasih telah mempercayakan distribusi musik Anda kepada BREAKOUT.</p>
-      <a href="https://breakoutmusic.online/dashboard/withdraw" style="${BUTTON_STYLES}">Lihat Riwayat Penarikan</a>
+      <a href="https://breakoutmusicrecord.com/dashboard/withdraw" style="${BUTTON_STYLES}">Lihat Riwayat Penarikan</a>
     `
   );
 
@@ -298,6 +298,32 @@ export async function sendWithdrawalPaidEmail(to: string, name: string) {
     return { success: true };
   } catch (error) {
     console.error('Failed to send withdrawal email:', error);
+    return { error };
+  }
+}
+
+export async function sendWithdrawalRejectedEmail(to: string, name: string) {
+  const subject = 'Penarikan Royalti Ditolak';
+  const html = generateEmailHtml(
+    'Status Penarikan Saldo',
+    `
+      <p>Halo ${name},</p>
+      <p>Mohon maaf, permintaan penarikan royalti (withdrawal) Anda <strong>telah ditolak</strong> oleh tim Admin.</p>
+      <p>Hal ini mungkin terjadi karena adanya ketidaksesuaian data rekening atau masalah lainnya. Silakan hubungi tim kami untuk informasi lebih lanjut.</p>
+      <a href="https://breakoutmusicrecord.com/dashboard/withdraw" style="${BUTTON_STYLES}">Lihat Riwayat Penarikan</a>
+    `
+  );
+
+  if (!process.env.RESEND_API_KEY) {
+    console.warn('Simulated Email Send Withdrawal Rejected:', subject, to);
+    return { success: true };
+  }
+
+  try {
+    await resend.emails.send({ from: fromEmail, to, subject, html });
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to send withdrawal rejected email:', error);
     return { error };
   }
 }
