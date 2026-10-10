@@ -6,9 +6,10 @@ import { Music, Play, ExternalLink } from "lucide-react";
 
 const prisma = new PrismaClient();
 
-export default async function SmartlinkPage({ params }: { params: { id: string } }) {
+export default async function SmartlinkPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const release = await prisma.release.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       artist: true,
       tracks: true
