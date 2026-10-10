@@ -117,6 +117,18 @@ export default async function SmartlinkPage({ params }: { params: Promise<{ id: 
               </div>
             )}
           </div>
+
+          {/* Other Platforms (Static) */}
+          <div className="mt-8 pt-6 border-t border-slate-700/50 w-full">
+            <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase mb-4">Juga Tersedia Di</p>
+            <div className="flex flex-wrap justify-center gap-x-5 gap-y-3 px-2">
+              {['TikTok', 'Instagram', 'Amazon Music', 'Joox', 'Trebel', 'Tidal', 'Deezer', 'SoundCloud', 'Pandora', 'Tencent', 'Boomplay', 'Audiomack'].map((plat) => (
+                <span key={plat} className="text-[11px] font-bold text-slate-500/60 transition-colors">
+                  {plat}
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
         
         <div className="bg-slate-900/80 p-4 border-t border-slate-800 flex justify-center">
